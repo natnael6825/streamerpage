@@ -1,4 +1,3 @@
-<!-- streamer.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,12 +24,17 @@
 
     async function startStreaming() {
       try {
+        // Get access to the user's webcam and microphone
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         document.getElementById('localVideo').srcObject = localStream;
 
+        // Create a new RTCPeerConnection
         peerConnection = new RTCPeerConnection(config);
+        
+        // Add local video and audio tracks to the connection
         localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
+        // Handle ICE candidates and send them to the signaling server
         peerConnection.onicecandidate = event => {
           if (event.candidate) {
             ws.send(JSON.stringify({
@@ -41,9 +45,11 @@
           }
         };
 
+        // Create an offer and set it as the local description
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
 
+        // Send the offer to the signaling server
         ws.send(JSON.stringify({
           type: 'offer',
           sdp: offer.sdp,
@@ -55,8 +61,10 @@
       }
     }
 
+    // Listen for messages from the signaling server
     ws.onmessage = async (message) => {
       const data = JSON.parse(message.data);
+
       if (data.type === 'answer') {
         const answer = new RTCSessionDescription({ type: 'answer', sdp: data.sdp });
         await peerConnection.setRemoteDescription(answer);
@@ -66,6 +74,7 @@
       }
     };
 
+    // Start the streaming process
     startStreaming();
   </script>
 </body>
