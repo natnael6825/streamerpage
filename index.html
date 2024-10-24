@@ -55,6 +55,7 @@
         let peerConnection;
         let socket;
         let orderId;
+        let isConnected = false; // To track if the viewer is connected
 
         const signalingServerURL = 'wss://video-server-jn3s.onrender.com'; // Your WebSocket server URL
 
@@ -109,6 +110,10 @@
 
             socket.onclose = () => {
                 console.log('Disconnected from signaling server');
+                if (!isConnected) {
+                    // Retry connection in 5 seconds if no viewer is connected
+                    setTimeout(initializeConnection, 5000);
+                }
             };
         }
 
@@ -146,6 +151,7 @@
             // Handle incoming remote stream
             peerConnection.ontrack = (event) => {
                 remoteVideo.srcObject = event.streams[0];
+                isConnected = true; // Mark as connected when the remote stream is received
             };
 
             // Create an offer if this client initiates the call
