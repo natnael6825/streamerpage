@@ -38,33 +38,11 @@
             pointer-events: none;
             /* Prevent interactions with local video */
         }
-
-        #loadingScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: black;
-            color: white;
-            font-size: 24px;
-            z-index: 3;
-            /* On top of everything */
-        }
-
-        #loadingScreen.hidden {
-            display: none;
-            /* Hide the loading screen */
-        }
     </style>
 </head>
 
 <body>
 
-        <div id="loadingScreen">Connecting...</div>
         <video id="localVideo" autoplay playsinline muted></video>
         <video id="remoteVideo" autoplay playsinline></video>
 
@@ -72,7 +50,6 @@
     <script>
         const localVideo = document.getElementById('localVideo');
         const remoteVideo = document.getElementById('remoteVideo');
-        const loadingScreen = document.getElementById('loadingScreen');
 
         let localStream;
         let peerConnection;
@@ -85,12 +62,6 @@
         function getOrderIdFromURL() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('orderId');
-        }
-
-        // Retry the connection if not successful
-        function retryConnection() {
-            console.log('Retrying connection...');
-            initializeConnection(); // Retry connection
         }
 
         // Automatically set the orderId from URL and start WebSocket connection
@@ -137,14 +108,7 @@
             };
 
             socket.onclose = () => {
-                console.log('Disconnected from signaling server. Retrying...');
-                // Retry after 5 seconds if disconnected
-                setTimeout(retryConnection, 5000);
-            };
-
-            socket.onerror = (error) => {
-                console.error('WebSocket error: ', error);
-                setTimeout(retryConnection, 5000); // Retry after 5 seconds on error
+                console.log('Disconnected from signaling server');
             };
         }
 
@@ -160,8 +124,7 @@
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                localVideo.srcObject = localStream; // Display local video immediately
-                console.log('Local stream initialized and playing.');
+                localVideo.srcObject = localStream;
             } catch (error) {
                 console.error('Error accessing media devices.', error);
             }
@@ -183,9 +146,6 @@
             // Handle incoming remote stream
             peerConnection.ontrack = (event) => {
                 remoteVideo.srcObject = event.streams[0];
-                // Hide the loading screen when the remote stream is received
-                loadingScreen.classList.add('hidden');
-                console.log('Remote stream connected and playing.');
             };
 
             // Create an offer if this client initiates the call
