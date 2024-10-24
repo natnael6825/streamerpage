@@ -160,7 +160,8 @@
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                localVideo.srcObject = localStream;
+                localVideo.srcObject = localStream; // Display local video immediately
+                console.log('Local stream initialized and playing.');
             } catch (error) {
                 console.error('Error accessing media devices.', error);
             }
